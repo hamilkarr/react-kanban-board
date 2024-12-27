@@ -7,12 +7,12 @@ function TrashBoard() {
     const toDos = useRecoilValue(toDosState);
 
     return (
-        <Droppable droppableId="휴지통">
+        <Droppable droppableId="휴지통" type="TASK">
             {(provided, snapshot) => (
                 <div
                     ref={provided.innerRef}
                     {...provided.droppableProps}
-                    className={`bg-red-300 w-full rounded-md min-h-80 flex flex-col py-3 ${
+                    className={`bg-red-300 rounded-md w-80 h-40 flex flex-col py-3 ${
                         snapshot.isDraggingOver ? "bg-red-500" : "bg-red-300"
                     }`}
                 >

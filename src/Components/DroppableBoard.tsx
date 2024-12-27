@@ -2,7 +2,7 @@ import React from "react";
 import { Droppable, DroppableStateSnapshot } from "react-beautiful-dnd";
 import DragabbleCard from "./DragabbleCard.tsx";
 import { useForm } from "react-hook-form";
-import { IToDo, IToDoState, toDosState } from "../atoms.tsx";
+import { IToDo, toDosState, boardOrderState } from "../atoms.tsx";
 import { useSetRecoilState } from "recoil";
 
 interface IDroppableBoardProps {
@@ -23,11 +23,12 @@ function DroppableBoard({ toDos, boardId }: IDroppableBoardProps) {
     };
 
     const setToDos = useSetRecoilState(toDosState);
+    const setBoardOrder = useSetRecoilState(boardOrderState);
     const { register, setValue, handleSubmit } = useForm<{ toDo: IToDo['text'] }>();
     const onValid = ({ toDo }: { toDo: IToDo['text'] }) => {
         if (!toDo) return;
         const newToDo = {
-            id: Date.now(), 
+            id: Date.now(),
             text: toDo
         }
         setToDos(allBoards => {
@@ -39,24 +40,35 @@ function DroppableBoard({ toDos, boardId }: IDroppableBoardProps) {
         setValue("toDo", "");
     }
 
+    const handleDelete = () => {
+        setToDos(allBoards => {
+            const newBoards = { ...allBoards };
+            delete newBoards[boardId];
+            return newBoards;
+        });
+        setBoardOrder(prevOrder => prevOrder.filter(id => id !== boardId));
+    };
+
     return (
-        <div className='bg-slate-300 w-full rounded-md min-h-80 flex flex-col py-3'>
-            <h2 className="text-xl font-bold mb-4 text-center">{boardId}</h2>
+        <div className='bg-slate-300 w-full min-w-72 rounded-md min-h-80 flex flex-col py-3'>
+            <div className="flex justify-between items-center mb-4 px-3">
+                <h2 className="text-xl font-bold text-center">{boardId}</h2>
+                <button onClick={handleDelete} className="px-2 py-1 bg-red-500 text-white rounded">삭제</button>
+            </div>
             <form onSubmit={handleSubmit(onValid)} className="px-3">
-                <input 
+                <input
                     type="text"
-                    placeholder={`Add task on ${boardId}`} 
+                    placeholder={`Add task on ${boardId}`}
                     {...register("toDo", { required: true })}
                     className="w-full px-2"
                 />
             </form>
-            <Droppable droppableId={boardId}>
+            <Droppable droppableId={boardId} type="TASK">
                 {(provided, snapshot) => (
                     <ul
                         ref={provided.innerRef}
                         {...provided.droppableProps}
-                        // 분리된 함수 getBackgroundColorClass를 이용해 클래스 지정
-                        className={`flex-grow ${getBackgroundColorClass(snapshot)} transition-colors duration-300 ease-in-out px-3 pt-3`}
+                        className={`flex-grow ${getBackgroundColorClass(snapshot)} transition-colors duration-300 ease-in-out px-3 pt-6`}
                     >
                         {toDos.map((toDo, index) => (
                             <DragabbleCard key={toDo.id} toDoId={toDo.id} toDoText={toDo.text} index={index} />
