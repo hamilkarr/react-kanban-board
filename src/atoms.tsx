@@ -1,18 +1,36 @@
-import { atom, selector } from "recoil";
+import { atom } from "recoil";
 
-export const minutesState = atom<number>({
-    key: 'minutes',
-    default: 0,
-});
+export interface IToDo {
+    id: number;
+    text: string;
+}
 
-export const hoursSelector = selector<number>({
-    key: 'hours',
-    get: ({ get }) => {
-        const minutes = get(minutesState);
-        return Number((minutes / 60).toFixed(2));
+export interface IToDoState {
+    [key: string]: IToDo[];
+}
+
+export const toDosState = atom<IToDoState>({
+    key: "toDos",
+    default: {
+        "To Do": [],
+        "Doing": [],
+        "Done": [],
+        "휴지통": []
     },
-    set: ({ set }, newValue) => {
-        const minutes = Number(newValue) * 60;
-        set(minutesState, minutes);
-    }   
+    effects_UNSTABLE: [
+        ({ setSelf, onSet }) => {
+            // atom이 초기화될 때 localStorage에서 기존 상태를 가져옵니다.
+            const savedValue = localStorage.getItem("toDos");
+            if (savedValue) setSelf(JSON.parse(savedValue));
+
+            // atom 값이 변경될 때마다 localStorage에 저장합니다.
+            onSet((newValue, _, isReset) => {
+                if (isReset) {
+                    localStorage.removeItem("toDos");
+                } else {
+                    localStorage.setItem("toDos", JSON.stringify(newValue));
+                }
+            });
+        },
+    ],
 });
